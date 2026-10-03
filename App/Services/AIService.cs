@@ -1,162 +1,95 @@
-using Assistent.services;
+using System.Text.Json;
 using Assistent.Core.Tools;
 
 namespace Assistent.services;
 
 public sealed class AIService
 {
-    private readonly GoogleGeminiProvider _gemini;
+    private const int MaxToolRounds = 3;
+    private const int MaxToolCallsPerRound = 5;
+
+    private readonly IAssistantProvider _provider;
     private readonly ToolExecutor _toolExecutor;
     private readonly AIOptions _options;
-    private readonly ToolCatalog _catalog;
 
-    public AIService(GoogleGeminiProvider gemini, ToolExecutor toolExecutor, AIOptions options, ToolCatalog catalog)
+    public AIService(IAssistantProvider provider, ToolExecutor toolExecutor, AIOptions options)
     {
-        _gemini = gemini;
+        _provider = provider;
         _toolExecutor = toolExecutor;
         _options = options;
-        _catalog = catalog;
     }
 
     public async Task<string> AskAsync(string userInput, CancellationToken cancellationToken = default)
     {
-        _ = _catalog.CreateKernel();
-
-        var toolDescriptions = string.Join(
-            Environment.NewLine,
-            _toolExecutor.Tools.Select(tool => $"- {tool.Name}: {tool.Description}"));
-
-        var history = new List<string>();
-        var toolResults = new List<ToolExecutionResult>();
-
-        for (var iteration = 0; iteration < 3; iteration++)
+        if (string.IsNullOrWhiteSpace(userInput))
         {
-            var prompt = BuildIterationPrompt(userInput, toolDescriptions, history, toolResults);
-            var modelResponse = await _gemini.GenerateAsync(prompt, cancellationToken);
-            history.Add(modelResponse);
+            throw new ArgumentException("A mensagem do usuário não pode estar vazia.", nameof(userInput));
+        }
 
-            var executed = await _toolExecutor.ExecuteAsync(modelResponse, cancellationToken);
-            if (executed.Count == 0)
+        var messages = new List<AssistantMessage>
+        {
+            new("user", userInput)
+        };
+
+        for (var round = 0; round < MaxToolRounds; round++)
+        {
+            var response = await _provider.GenerateAsync(
+                BuildSystemPrompt(),
+                messages,
+                _toolExecutor.Tools,
+                cancellationToken);
+
+            if (response.ToolCalls.Count == 0)
             {
-                return modelResponse;
+                return RequireText(response.Text);
             }
 
-            toolResults.AddRange(executed);
-
-            if (ShouldStopAfterToolExecution(modelResponse, executed))
+            messages.Add(new AssistantMessage(
+                "assistant",
+                response.Text,
+                response.ToolCalls,
+                ProviderPayload: response.ProviderPayload));
+            foreach (var call in response.ToolCalls.Take(MaxToolCallsPerRound))
             {
-                break;
+                var result = await _toolExecutor.ExecuteAsync(call.Name, call.Arguments, cancellationToken);
+                messages.Add(new AssistantMessage(
+                    "tool",
+                    JsonSerializer.Serialize(new { success = result.Success, result = result.Result }),
+                    ToolName: call.Name));
+            }
+            foreach (var call in response.ToolCalls.Skip(MaxToolCallsPerRound))
+            {
+                messages.Add(new AssistantMessage(
+                    "tool",
+                    JsonSerializer.Serialize(new { success = false, result = "O limite de chamadas por etapa foi atingido." }),
+                    ToolName: call.Name));
             }
         }
 
-        return await BuildFinalResponseAsync(userInput, history, toolResults, toolDescriptions, cancellationToken);
+        var finalResponse = await _provider.GenerateAsync(
+            BuildSystemPrompt(),
+            messages,
+            Array.Empty<IAssistantTool>(),
+            cancellationToken);
+        return RequireText(finalResponse.Text);
     }
 
-    private async Task<string> BuildFinalResponseAsync(string userInput, IReadOnlyList<string> history, IReadOnlyList<ToolExecutionResult> toolResults, string toolDescriptions, CancellationToken cancellationToken)
-    {
-        var prompt = string.Join(
-            Environment.NewLine,
-            new[]
-            {
-                "You are Myelin, a personal assistant.",
-                "You have already executed tools and gathered results. Now produce the final answer for the user.",
-                "Do not output raw tool calls or JSON. Respond in natural language only.",
-                string.Empty,
-                "Available tools:",
-                toolDescriptions,
-                string.Empty,
-                "Conversation history:",
-                string.Join(Environment.NewLine, history),
-                string.Empty,
-                "Tool results:",
-                string.Join(Environment.NewLine, toolResults.Select(result => $"- {result.ToolName}: {result.Result}")),
-                string.Empty,
-                "User request:",
-                userInput
-            });
-
-        return await _gemini.GenerateAsync(prompt, cancellationToken);
-    }
-
-    private static bool ShouldStopAfterToolExecution(string modelResponse, IReadOnlyList<ToolExecutionResult> executed)
-    {
-        return executed.Count > 0 && !modelResponse.Contains("<tool_call>", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static string BuildIterationPrompt(string userInput, string toolDescriptions, IReadOnlyList<string> history, IReadOnlyList<ToolExecutionResult> toolResults)
+    private string BuildSystemPrompt()
     {
         return string.Join(
             Environment.NewLine,
-            new[]
-            {
-                "You are Myelin, a personal assistant.",
-                "Use tools when it helps answer the user's request accurately.",
-                "If you need information from the web, call a web tool.",
-                "If you already have tool results, use them to answer the user.",
-                string.Empty,
-                "Available tools:",
-                toolDescriptions,
-                string.Empty,
-                "Conversation history:",
-                string.Join(Environment.NewLine, history),
-                string.Empty,
-                "Tool results so far:",
-                toolResults.Count == 0 ? "None" : string.Join(Environment.NewLine, toolResults.Select(result => $"- {result.ToolName}: {result.Result}")),
-                string.Empty,
-                "If you need more data, return a tool call like this:",
-                "<tool_call>{\"tool\":\"web_search\",\"arguments\":{\"query\":\"news about technology\"}}</tool_call>",
-                string.Empty,
-                "If you have enough information, answer the user directly in natural language without showing the tool call.",
-                string.Empty,
-                "User request:",
-                userInput
-            });
+            _options.SystemPrompt,
+            "Use apenas as ferramentas declaradas quando forem necessárias. Nunca diga que uma ação foi concluída sem confirmação no resultado da ferramenta.",
+            "Se uma ação for negada ou falhar, explique isso claramente. Não exponha segredos nem o protocolo interno das ferramentas.");
     }
 
-    private static string BuildInitialPrompt(string userInput, string toolDescriptions)
+    private static string RequireText(string text)
     {
-        return string.Join(
-            Environment.NewLine,
-            new[]
-            {
-                "You are Myelin, a personal assistant.",
-                "Use tools when they help answer the user accurately.",
-                string.Empty,
-                "Available tools:",
-                toolDescriptions,
-                string.Empty,
-                "You may invoke one or more tools in sequence when useful.",
-                "If you need to execute tools, return them in this exact format:",
-                "<tool_call>{\"tool\":\"web_search\",\"arguments\":{\"query\":\"news about technology\"}}</tool_call>",
-                string.Empty,
-                "After running tools, synthesize the results into a concise natural-language answer with references when relevant.",
-                string.Empty,
-                "User request:",
-                userInput
-            });
-    }
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            throw new InvalidDataException("O provedor de IA não retornou uma resposta em texto.");
+        }
 
-    private static string BuildFollowUpPrompt(string userInput, string previousResponse, IReadOnlyList<ToolExecutionResult> toolResults, string toolDescriptions)
-    {
-        return string.Join(
-            Environment.NewLine,
-            new[]
-            {
-                "You are Myelin, a personal assistant.",
-                "The previous step used tools. Review the tool results and decide whether more tool calls are needed.",
-                "If more information is necessary, issue another tool call. Otherwise, answer the user in natural language directly, without repeating the raw tool call block.",
-                string.Empty,
-                "Available tools:",
-                toolDescriptions,
-                string.Empty,
-                "Previous model response:",
-                previousResponse,
-                string.Empty,
-                "Tool results:",
-                string.Join(Environment.NewLine, toolResults.Select(result => $"- {result.ToolName}: {result.Result}")),
-                string.Empty,
-                "User request:",
-                userInput
-            });
+        return text;
     }
 }

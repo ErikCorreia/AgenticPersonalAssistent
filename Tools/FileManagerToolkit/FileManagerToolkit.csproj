@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputPath>..\..\bin\$(Configuration)\net10.0\plugins\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Assistent.csproj" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="file_manager.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

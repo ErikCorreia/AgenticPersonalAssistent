@@ -1,0 +1,1 @@
+Use esta ferramenta quando o usuário pedir a data ou a hora atual do computador. Ela não requer argumentos e retorna os horários local e UTC.

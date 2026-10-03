@@ -13,15 +13,20 @@ class Myelin
 
         var catalog = new ToolCatalog();
         catalog.DiscoverToolsFromCurrentAssembly();
-        catalog.LoadFromDirectory(options.PluginDirectory);
+        catalog.LoadFromDirectory(options.PluginDirectory, options.AllowedPlugins);
 
-        var gemini = new GoogleGeminiProvider(new HttpClient(), options);
-        _service = new AIService(gemini, catalog.BuildExecutor(), options, catalog);
+        var httpClient = new HttpClient();
+        IAssistantProvider provider = options.Provider.Equals("Ollama", StringComparison.OrdinalIgnoreCase)
+            ? new OllamaProvider(httpClient, options)
+            : new GoogleGeminiProvider(httpClient, options);
+        _service = new AIService(
+            provider,
+            catalog.BuildExecutor(new ConsoleToolApprovalService(options.Provider, options.OllamaBaseUrl)),
+            options);
+        Console.WriteLine($"Provedor de IA: {provider.Name}.");
     }
     public Task<string> AskAsync(string input, CancellationToken cancellationToken = default)
     {
         return _service.AskAsync(input, cancellationToken);
     }
 }
-
-
