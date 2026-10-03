@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 
@@ -13,7 +13,7 @@ public sealed class AIOptions
     public string OllamaModel { get; init; } = "qwen3:8b";
     public string PluginDirectory { get; init; } = Path.Combine(AppContext.BaseDirectory, "plugins");
     public string SystemPrompt { get; init; } = "Você é um assistente pessoal. Responda em português e use ferramentas quando apropriado.";
-    public string[] AllowedPlugins { get; init; } = new[] { "ExampleToolkit.dll", "FileManagerToolkit.dll" };
+    public string[] AllowedPlugins { get; init; } = new[] { "ExampleToolkit.dll", "FileManagerToolkit.dll", "WebSearchToolkit.dll" };
 
     public static AIOptions Load()
     {
@@ -89,7 +89,7 @@ public sealed class AIOptions
             PluginDirectory = ResolvePath(pluginDirectory, baseDirectory),
             SystemPrompt = systemPrompt,
             AllowedPlugins = allowedPlugins.Length == 0
-                ? new[] { "ExampleToolkit.dll", "FileManagerToolkit.dll" }
+                ? new[] { "ExampleToolkit.dll", "FileManagerToolkit.dll", "WebSearchToolkit.dll" }
                 : allowedPlugins
         };
 

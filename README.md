@@ -42,7 +42,7 @@ Baixe o modelo configurado no Ollama antes de iniciar o assistente, por exemplo 
 
 ## Plugins
 
-`Assistent:AllowedPlugins` em `appsettings.json` limita quais DLLs no diretório de plugins podem ser carregadas. `ASSISTENT_ALLOWED_PLUGINS` pode substituir a lista, com nomes separados por `;`. O padrão permite `ExampleToolkit.dll` e `FileManagerToolkit.dll`.
+`Assistent:AllowedPlugins` em `appsettings.json` limita quais DLLs no diretório de plugins podem ser carregadas. `ASSISTENT_ALLOWED_PLUGINS` pode substituir a lista, com nomes separados por `;`. O padrão permite `WebSearchToolkit.dll`, `ExampleToolkit.dll` e `FileManagerToolkit.dll`.
 
 Plugins são código executável no processo do assistente; a lista de nomes não os isola nem substitui a confiança no código e na pasta de plugins. Permita apenas DLLs de origem confiável.
 
@@ -51,3 +51,7 @@ Plugins são código executável no processo do assistente; a lista de nomes nã
 ```powershell
 dotnet test Assistent.sln
 ```
+
+## Pesquisa na web (web_search)
+
+O plugin web_search usa a Brave Search API (search) e busca texto de páginas públicas (etch). Defina a chave em BRAVE_API_KEY (variável de ambiente; nunca em arquivos). Toda ação exige aprovação, pois envia dados a terceiros. O etch aceita só http/https, bloqueia hosts locais/privados (inclusive via redirecionamento e DNS rebinding), limita o download a 1 MB e só lê HTML/texto.

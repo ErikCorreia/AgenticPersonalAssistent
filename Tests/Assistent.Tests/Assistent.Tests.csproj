@@ -9,5 +9,6 @@
     <ProjectReference Include="..\..\Assistent.csproj" />
     <ProjectReference Include="..\..\Tools\ExampleToolkit\ExampleToolkit.csproj" />
     <ProjectReference Include="..\..\Tools\FileManagerToolkit\FileManagerToolkit.csproj" />
+    <ProjectReference Include="..\..\Tools\WebSearchToolkit\WebSearchToolkit.csproj" />
   </ItemGroup>
 </Project>
