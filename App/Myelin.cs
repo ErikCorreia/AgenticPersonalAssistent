@@ -22,7 +22,11 @@ class Myelin
         _service = new AIService(
             provider,
             catalog.BuildExecutor(new ConsoleToolApprovalService(options.Provider, options.OllamaBaseUrl)),
-            options);
+            options,
+            new Assistent.Core.Guardrails.GuardrailPipeline(
+                options.Guardrails,
+                new[] { options.GoogleApiKey, Environment.GetEnvironmentVariable("BRAVE_API_KEY") },
+                reason => Console.WriteLine($"[guardrail] {reason}")));
         Console.WriteLine($"Provedor de IA: {provider.Name}.");
     }
     public Task<string> AskAsync(string input, CancellationToken cancellationToken = default)

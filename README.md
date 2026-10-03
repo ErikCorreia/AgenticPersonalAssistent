@@ -55,3 +55,7 @@ dotnet test Assistent.sln
 ## Pesquisa na web (web_search)
 
 O plugin web_search usa a Brave Search API (search) e busca texto de páginas públicas (etch). Defina a chave em BRAVE_API_KEY (variável de ambiente; nunca em arquivos). Toda ação exige aprovação, pois envia dados a terceiros. O etch aceita só http/https, bloqueia hosts locais/privados (inclusive via redirecionamento e DNS rebinding), limita o download a 1 MB e só lê HTML/texto.
+
+## Guardrails
+
+Todo fluxo passa por um GuardrailPipeline (App/Core/Guardrails): a entrada do usuário e a saída do LLM são higienizadas (caracteres de controle/invisíveis, redação de segredos, limites de tamanho); chamadas de ferramenta são validadas (nome, tamanho, repetição); resultados de ferramentas são truncados, redigidos e embrulhados como dados não confiáveis, com detecção de prompt injection que interrompe novas chamadas. Limites em appsettings.json (seção Guardrails).
