@@ -1,4 +1,4 @@
-# Myelin
+﻿# Myelin
 
 Assistente pessoal para Windows, executado no console e conectado ao Gemini ou Ollama. As ferramentas são carregadas como plugins .NET permitidos na configuração.
 
@@ -59,3 +59,11 @@ O plugin web_search usa a Brave Search API (search) e busca texto de páginas p�
 ## Guardrails
 
 Todo fluxo passa por um GuardrailPipeline (App/Core/Guardrails): a entrada do usuário e a saída do LLM são higienizadas (caracteres de controle/invisíveis, redação de segredos, limites de tamanho); chamadas de ferramenta são validadas (nome, tamanho, repetição); resultados de ferramentas são truncados, redigidos e embrulhados como dados não confiáveis, com detecção de prompt injection que interrompe novas chamadas. Limites em appsettings.json (seção Guardrails).
+
+## Voz (STT/TTS)
+
+- `/voz`: ouve uma frase pelo microfone (Whisper local) e a envia ao assistente.
+- `/falar`: liga/desliga a leitura em voz alta das respostas (Windows TTS, via `System.Speech`).
+- Baixe um modelo ggml do Whisper (ex.: `ggml-base.bin`, em huggingface.co/ggerganov/whisper.cpp) e coloque em `models\` ou ajuste `Speech:WhisperModelPath` no `appsettings.json`.
+- O projeto agora usa o TFM `net10.0-windows`. Provedores de voz na nuvem ainda não foram implementados.
+

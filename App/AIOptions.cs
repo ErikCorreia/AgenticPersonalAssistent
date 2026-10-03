@@ -14,6 +14,7 @@ public sealed class AIOptions
     public string PluginDirectory { get; init; } = Path.Combine(AppContext.BaseDirectory, "plugins");
     public string SystemPrompt { get; init; } = "Você é um assistente pessoal. Responda em português e use ferramentas quando apropriado.";
     public Assistent.Core.Guardrails.GuardrailOptions Guardrails { get; init; } = new();
+    public Assistent.Speech.SpeechOptions Speech { get; init; } = new();
     public string[] AllowedPlugins { get; init; } = new[] { "ExampleToolkit.dll", "FileManagerToolkit.dll", "WebSearchToolkit.dll" };
 
     public static AIOptions Load()
@@ -87,6 +88,7 @@ public sealed class AIOptions
             OllamaModel = Environment.GetEnvironmentVariable("OLLAMA_MODEL")
                 ?? assistentSection["OllamaModel"]
                 ?? "qwen3:8b",
+            Speech = LoadSpeech(configuration.GetSection("Speech")),
             PluginDirectory = ResolvePath(pluginDirectory, baseDirectory),
             SystemPrompt = systemPrompt,
             AllowedPlugins = allowedPlugins.Length == 0
@@ -157,6 +159,21 @@ public sealed class AIOptions
         return File.Exists(promptPath) && Path.GetExtension(promptPath).Equals(".md", StringComparison.OrdinalIgnoreCase)
             ? File.ReadAllText(promptPath)
             : setting;
+    }
+
+    private static Assistent.Speech.SpeechOptions LoadSpeech(IConfigurationSection s)
+    {
+        var d = new Assistent.Speech.SpeechOptions();
+        return new Assistent.Speech.SpeechOptions
+        {
+            Language = s["Language"] ?? d.Language,
+            WhisperModelPath = s["WhisperModelPath"] ?? d.WhisperModelPath,
+            Voice = s["Voice"] ?? d.Voice,
+            Rate = int.TryParse(s["Rate"], out var r) ? r : d.Rate,
+            SpeakResponses = bool.TryParse(s["SpeakResponses"], out var sp) ? sp : d.SpeakResponses,
+            MaxListenSeconds = int.TryParse(s["MaxListenSeconds"], out var m) ? m : d.MaxListenSeconds,
+            SilenceMilliseconds = int.TryParse(s["SilenceMilliseconds"], out var si) ? si : d.SilenceMilliseconds
+        };
     }
 
     private static void Save(string path, AIOptions options)
