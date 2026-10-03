@@ -67,3 +67,4 @@ Todo fluxo passa por um GuardrailPipeline (App/Core/Guardrails): a entrada do us
 - Baixe um modelo ggml do Whisper (ex.: `ggml-base.bin`, em huggingface.co/ggerganov/whisper.cpp) e coloque em `models\` ou ajuste `Speech:WhisperModelPath` no `appsettings.json`.
 - O projeto agora usa o TFM `net10.0-windows`. Provedores de voz na nuvem ainda não foram implementados.
 
+- Voz mais natural (opcional): defina `Speech:TtsProvider` como `Piper`, baixe o [Piper](https://github.com/rhasspy/piper/releases) para `piper\` e um modelo pt-BR (ex.: `pt_BR-faber-medium.onnx` e `.json`) de huggingface.co/rhasspy/piper-voices. O padrão continua `Windows`.

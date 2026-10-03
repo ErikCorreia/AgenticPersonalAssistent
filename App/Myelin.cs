@@ -53,7 +53,9 @@ class Myelin
     {
         var clean = SpeechTextCleaner.Clean(text);
         if (clean.Length == 0) return;
-        _tts ??= new WindowsTts(_options.Speech);
+        _tts ??= string.Equals(_options.Speech.TtsProvider, "Piper", StringComparison.OrdinalIgnoreCase)
+            ? new PiperTts(_options.Speech)
+            : new WindowsTts(_options.Speech);
         await _tts.SpeakAsync(clean, cancellationToken);
     }
 }
