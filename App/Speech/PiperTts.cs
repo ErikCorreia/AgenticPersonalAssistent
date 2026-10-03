@@ -31,6 +31,12 @@ public sealed class PiperTts : ITextToSpeech
             };
             psi.ArgumentList.Add("--model");
             psi.ArgumentList.Add(_model);
+            var altConfig = Path.ChangeExtension(_model, ".json");
+            if (!File.Exists(_model + ".json") && File.Exists(altConfig))
+            {
+                psi.ArgumentList.Add("--config");
+                psi.ArgumentList.Add(altConfig);
+            }
             psi.ArgumentList.Add("--output_file");
             psi.ArgumentList.Add(wav);
             using var process = Process.Start(psi) ?? throw new InvalidOperationException("Falha ao iniciar o Piper.");

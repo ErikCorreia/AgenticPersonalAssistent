@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="appsettings*.json" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Prompts\system-prompt.md" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="piper\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="piper" Condition="Exists('piper')" />
     <Content Include="models\**\*" CopyToOutputDirectory="PreserveNewest" LinkBase="models" Condition="Exists('models')" />
