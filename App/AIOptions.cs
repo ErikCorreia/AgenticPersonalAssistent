@@ -170,6 +170,8 @@ public sealed class AIOptions
             WhisperModelPath = s["WhisperModelPath"] ?? d.WhisperModelPath,
             Voice = s["Voice"] ?? d.Voice,
             TtsProvider = s["TtsProvider"] ?? d.TtsProvider,
+            ElevenLabsVoiceId = s["ElevenLabsVoiceId"] ?? d.ElevenLabsVoiceId,
+            ElevenLabsModel = s["ElevenLabsModel"] ?? d.ElevenLabsModel,
             PiperPath = s["PiperPath"] ?? d.PiperPath,
             PiperModelPath = s["PiperModelPath"] ?? d.PiperModelPath,
             Rate = int.TryParse(s["Rate"], out var r) ? r : d.Rate,
