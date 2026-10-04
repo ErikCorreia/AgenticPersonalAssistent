@@ -12,7 +12,13 @@ dotnet build Assistent.sln
 dotnet run --project Assistent.csproj
 ```
 
-Configure `GOOGLE_AI_API_KEY` no ambiente do processo ou informe a chave quando solicitada. A solicitação interativa não mostra o texto digitado, e a chave não é gravada em `appsettings.json`. Evite colocar segredos em comandos salvos no histórico do terminal.
+Chaves de API são variáveis de ambiente (nunca no `appsettings.json`): `GOOGLE_AI_API_KEY` (Gemini), `BRAVE_API_KEY` (pesquisa web) e `ELEVENLABS_API_KEY` (voz). Para definir permanentemente no PowerShell (reabra o terminal/IDE depois):
+
+```powershell
+[Environment]::SetEnvironmentVariable("GOOGLE_AI_API_KEY", "sua_chave_aqui", "User")
+```
+
+Só para a sessão atual: `$env:GOOGLE_AI_API_KEY = "sua_chave_aqui"`. Para o Gemini, também é possível informar a chave quando solicitada. A solicitação interativa não mostra o texto digitado, e a chave não é gravada em `appsettings.json`. Evite colocar segredos em comandos salvos no histórico do terminal.
 
 O modelo e as opções não secretas ficam em `appsettings.json`. A chave é enviada ao Gemini pelo cabeçalho de autenticação, nunca na URL. Quando Gemini está selecionado, as mensagens da conversa são processadas pelo serviço na nuvem.
 
