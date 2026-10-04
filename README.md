@@ -1,4 +1,4 @@
-﻿# Myelin
+# Myelin
 
 Assistente pessoal para Windows, executado no console e conectado ao Gemini ou Ollama. As ferramentas são carregadas como plugins .NET permitidos na configuração.
 
@@ -68,3 +68,4 @@ Todo fluxo passa por um GuardrailPipeline (App/Core/Guardrails): a entrada do us
 - O projeto agora usa o TFM `net10.0-windows`. Provedores de voz na nuvem ainda não foram implementados.
 
 - Voz mais natural (opcional): defina `Speech:TtsProvider` como `Piper`, baixe o [Piper](https://github.com/rhasspy/piper/releases) para `piper\` e um modelo pt-BR (ex.: `pt_BR-faber-medium.onnx` e `.json`) de huggingface.co/rhasspy/piper-voices. O padrão continua `Windows`.
+- Voz na nuvem (opcional): defina `Speech:TtsProvider` como `ElevenLabs`, a variável de ambiente `ELEVENLABS_API_KEY` e `Speech:ElevenLabsVoiceId` (ID da voz no ElevenLabs). `Speech:ElevenLabsModel` usa `eleven_multilingual_v2` por padrão. Provedores aceitos: `Windows`, `Piper` e `ElevenLabs`.
