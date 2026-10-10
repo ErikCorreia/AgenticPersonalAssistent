@@ -7,5 +7,12 @@
 .env
 .env.*
 
+# TTS
+# Transformar texto em voz localmente 
+# Baixar, extrair release do piper para a raiz do projeto
 piper/
-models/
+
+# STT
+# Converter voz para texto
+# Adicionar models/ggml-base.bin
+whisper/
